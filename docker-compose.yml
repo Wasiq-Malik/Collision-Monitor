@@ -5,17 +5,3 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-  producer:
-    build: .
-    volumes:
-      - .:/app
-    command: ["./wait-for-it.sh", "rabbitmq:5672", "--", "python", "producer.py"]
-    depends_on:
-      - rabbitmq
-  consumer:
-    build: .
-    volumes:
-      - .:/app
-    command:  ["./wait-for-it.sh", "rabbitmq:5672", "--", "python", "consumer.py"]
-    depends_on:
-      - rabbitmq
