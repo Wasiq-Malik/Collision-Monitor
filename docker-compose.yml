@@ -1,21 +1,21 @@
-version: '1'
+version: '3'
 services:
   rabbitmq:
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
       - "15672:15672"
-  sender:
+  producer:
     build: .
     volumes:
       - .:/app
-    command: ["./wait.sh", "rabbitmq", "python", "producer.py"]
+    command: ["./wait-for-it.sh", "rabbitmq:5672", "--", "python", "producer.py"]
     depends_on:
       - rabbitmq
-  receiver:
+  consumer:
     build: .
     volumes:
       - .:/app
-    command:  ["./wait.sh", "rabbitmq", "python", "consumer.py"]
+    command:  ["./wait-for-it.sh", "rabbitmq:5672", "--", "python", "consumer.py"]
     depends_on:
       - rabbitmq

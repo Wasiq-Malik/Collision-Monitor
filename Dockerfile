@@ -6,9 +6,7 @@ ADD . /app
 
 RUN apt-get update && apt-get install -y netcat-openbsd && \
     pip install --trusted-host pypi.python.org -r requirements.txt && \
-    chmod +x wait.sh
+    chmod +x wait-for-it.sh
 
-EXPOSE 80
+ENTRYPOINT ["./wait-for-it.sh", "rabbitmq:5672", "--"]
 
-# Run producer.py when the container launches
-CMD ["python", "producer.py"]
