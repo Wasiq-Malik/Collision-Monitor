@@ -1,7 +1,12 @@
 import time
+import logging
+from rabbitmq_consumer import RabbitMQConsumer
+from rabbitmq_publisher import RabbitMQPublisher
+
+logging.basicConfig(level=logging.INFO)
 
 class Robot:
-    def __init__(self, device_id, initial_position, path, rabbitmq_client):
+    def __init__(self, device_id, initial_position, path, rabbitmq_server):
         self.device_id = device_id
         self.x, self.y, self.theta = initial_position
         self.battery_level = 100  # Assuming battery starts at 100%
@@ -9,8 +14,14 @@ class Robot:
         self.path = path
         self.path_index = 0  # Index to keep track of robot's position in the path
         self.status = 'active'  # Possible statuses: active, paused
-        self.rabbitmq_client = rabbitmq_client  # Composition
+        self.publisher = RabbitMQPublisher(rabbitmq_server, 'robot_states')
+        self.consumer = RabbitMQConsumer(rabbitmq_server, f"{self.device_id}_commands", self.handle_command)
 
+    def handle_command(self, command):
+        if command == 'pause':
+            self.pause()
+        elif command == 'resume':
+            self.resume()
 
     def move(self):
         # Check if there are more nodes in the path and the robot is active
@@ -18,7 +29,8 @@ class Robot:
             self.path_index += 1
             next_node = self.path[self.path_index]
             self.x, self.y, self.theta = next_node['x'], next_node['y'], next_node['theta']
-            # You might also want to decrement the battery level based on movement
+            self.battery_level -= 1
+            logging.info(f"Moved to node {self.path_index}")
 
     def pause(self):
         self.status = 'paused'
@@ -39,5 +51,12 @@ class Robot:
         }
 
     def send_state(self):
-        state_message = self.get_state()
-        self.rabbitmq_client.send_message(state_message)
+        try:
+            state_message = self.get_state()
+            self.publisher.send_message(state_message)
+            logging.info(f"Sent state message for {self.device_id}")
+        except Exception as e:
+            logging.error(f"An error occurred: {e}")
+
+    def listen_commands(self):
+        self.consumer.start_consuming()
