@@ -1,0 +1,21 @@
+version: '1'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  sender:
+    build: .
+    volumes:
+      - .:/app
+    command: ["./wait.sh", "rabbitmq", "python", "producer.py"]
+    depends_on:
+      - rabbitmq
+  receiver:
+    build: .
+    volumes:
+      - .:/app
+    command:  ["./wait.sh", "rabbitmq", "python", "consumer.py"]
+    depends_on:
+      - rabbitmq
