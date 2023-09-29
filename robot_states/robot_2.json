@@ -1,0 +1,13 @@
+{
+    "device_id": "robot_2",
+    "timestamp": 1657453020000,
+    "x": 5.0,
+    "y": 0.0,
+    "theta": 1.57,
+    "battery_level": 87.2,
+    "loaded": false,
+    "path": [
+        {"x": 5.0, "y": 0.0, "theta": 1.57},
+        {"x": 5.0, "y": 10.0, "theta": 1.57}
+    ]
+}

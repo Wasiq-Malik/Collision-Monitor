@@ -2,6 +2,8 @@ import logging
 from robot import Robot
 from rabbitmq_client import RabbitMQClient
 import time
+import json
+import sys
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
@@ -11,6 +13,12 @@ logger = logging.getLogger(__name__)
 
 def main():
     logger.info('Starting application')
+    # Get filename from command line arguments
+    filename = sys.argv[1]
+
+    # Load robot details from the specified JSON file
+    with open(filename, 'r') as file:
+        robot_details = json.load(file)
 
     # Define the RabbitMQ server and queue name
     rabbitmq_server = 'localhost'
@@ -19,21 +27,15 @@ def main():
     # Create an instance of the RabbitMQClient
     rabbitmq_client = RabbitMQClient(rabbitmq_server=rabbitmq_server, queue_name=shared_queue_name)
 
-    # Define the initial position, path, and device ID for the robot
-    initial_position = (10.0, 12.3, 1.57)
-    path = [
-        {"x": 10.0, "y": 12.3, "theta": 1.57},
-        {"x": 11.0, "y": 12.3, "theta": 1.57},
-        {"x": 12.0, "y": 12.3, "theta": 1.57},
-        {"x": 13.0, "y": 12.3, "theta": 1.57}
-    ]
-    device_id = 'Herby'
-
     # Create an instance of the Robot
-    robot = Robot(device_id=device_id, initial_position=initial_position, path=path, rabbitmq_client=rabbitmq_client)
-
+    robot = Robot(
+        device_id=robot_details['device_id'],
+        initial_position=(robot_details['x'], robot_details['y'], robot_details['theta']),
+        path=robot_details['path'],
+        rabbitmq_client=rabbitmq_client
+    )
     # Simulate the robot's movement and send its state to RabbitMQ
-    for _ in range(len(path) - 1):
+    for _ in range(len(robot.path) - 1):
         logger.info('Moving robot and sending state to RabbitMQ')
         robot.move()
         robot.send_state()
