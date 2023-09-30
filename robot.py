@@ -3,7 +3,7 @@ import logging
 import threading
 from rabbitmq_client import RabbitMQConsumer, RabbitMQPublisher
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 class Robot:
     def __init__(self, device_id, initial_position, path, rabbitmq_server):
