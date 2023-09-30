@@ -12,7 +12,7 @@ class CollisionMonitor:
     def __init__(self, rabbitmq_server, input_queue_name):
         self.rabbitmq_server = rabbitmq_server
         self.robot_states = {}  # To store the latest state of each robot
-        self.paused_robots = set()  # To keep track of which robots are paused each iteration
+        self.recently_paused_robots = set()  # To keep track of which robots are paused each iteration
         self.dependencies = defaultdict(set)  # Maintain a set of dependencies for each paused robot
         self.consumer = RabbitMQConsumer(self.rabbitmq_server, input_queue_name, self.handle_state_update)
         self.publishers = {}  # To store RabbitMQPublisher instances for each robot
@@ -45,7 +45,7 @@ class CollisionMonitor:
         self.resume_robots(device_id)
 
         # Clear the set of paused robots at the end of the iteration
-        self.paused_robots.clear()
+        self.recently_paused_robots.clear()
 
 
     def resolve_collisions(self, potential_collisions):
@@ -66,7 +66,7 @@ class CollisionMonitor:
             # Pause the robot and send the command
             self.send_command(robot_to_pause, 'pause')
             self.dependencies[robot_to_pause].update(collision_map[robot_to_pause])  # Add dependencies
-            self.paused_robots.add(robot_to_pause)  # Mark the robot as paused in the current iteration
+            self.recently_paused_robots.add(robot_to_pause)  # Mark the robot as paused in the current iteration
 
             logger.info(f"Paused {robot_to_pause} to resolve collisions")
 
@@ -122,7 +122,7 @@ class CollisionMonitor:
 
     def resume_robots(self, moved_robot_id):
         for paused_robot, dependencies in list(self.dependencies.items()):
-            if paused_robot in self.paused_robots:  # Skip robots that were paused in the current iteration
+            if paused_robot in self.recently_paused_robots:  # Skip robots that were paused in the current iteration
                 continue
             dependencies.discard(moved_robot_id)  # Remove the moved robot from the dependencies of paused robots
 
