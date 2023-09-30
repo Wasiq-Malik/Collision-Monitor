@@ -34,22 +34,38 @@ class Robot:
             self.resume()
             logging.info(f"{self.device_id} has resumed")
         else:
-            logging.error(f"Invalid command received: {command}")
+            logging.warning(f"Invalid command received: {command}")
 
     def move(self):
-        # Check if there are more nodes in the path and the robot is active
-        if self.path_index < len(self.path) - 1 and self.status == 'active':
-            self.path_index += 1
-            next_node = self.path[self.path_index]
-            self.x, self.y, self.theta = next_node['x'], next_node['y'], next_node['theta']
-            self.battery_level -= 1
-            logging.info(f"Moved to node {self.path_index}")
+        # Check if the robot is paused
+        if self.status == 'paused':
+            logging.info(f"{self.device_id} is paused and cannot move")
+            return
+
+        # Check if the robot is at the last node in its path
+        if self.path_index >= len(self.path) - 1:
+            logging.info(f"{self.device_id} has reached the last node in its path and cannot move")
+            return
+
+        # Check if the battery level is sufficient to move
+        if self.battery_level <= 0:
+            logging.warning(f"{self.device_id} has insufficient battery level to move")
+            return
+
+        # Move to the next node in the path
+        self.path_index += 1
+        next_node = self.path[self.path_index]
+        self.x, self.y, self.theta = next_node['x'], next_node['y'], next_node['theta']
+        self.battery_level -= 1  # Assume moving to the next node consumes 1% of the battery
+        logging.info(f"{self.device_id} moved to node {next_node}")
 
     def pause(self):
         self.status = 'paused'
+        logging.info(f"{self.device_id} status changed to {self.status}")
 
     def resume(self):
         self.status = 'active'
+        logging.info(f"{self.device_id} status changed to {self.status}")
 
     def get_state(self):
         return {
@@ -69,7 +85,7 @@ class Robot:
             self.publisher.send_message(state_message)
             logging.info(f"Sent state message for {self.device_id}")
         except Exception as e:
-            logging.error(f"An error occurred: {e}")
+            logging.error(f"Failed to send state message for {self.device_id}: {e}")
 
     def listen_commands(self):
         self.consumer.start_consuming()
