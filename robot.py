@@ -1,7 +1,7 @@
 import time
 import logging
-from rabbitmq_consumer import RabbitMQConsumer
-from rabbitmq_publisher import RabbitMQPublisher
+import threading
+from rabbitmq_client import RabbitMQConsumer, RabbitMQPublisher
 
 logging.basicConfig(level=logging.INFO)
 
@@ -16,12 +16,25 @@ class Robot:
         self.status = 'active'  # Possible statuses: active, paused
         self.publisher = RabbitMQPublisher(rabbitmq_server, 'robot_states')
         self.consumer = RabbitMQConsumer(rabbitmq_server, f"{self.device_id}_commands", self.handle_command)
+        self.command_listener_thread = threading.Thread(target=self.listen_commands, daemon=True)
+        self.command_listener_thread.start()
 
-    def handle_command(self, command):
+
+
+    def handle_command(self, message_dict):
+        command = message_dict.get('command')
+        if not command:
+            logging.error(f"Command not found in the received message: {message_dict}")
+            return
+
         if command == 'pause':
             self.pause()
+            logging.info(f"{self.device_id} has been paused")
         elif command == 'resume':
             self.resume()
+            logging.info(f"{self.device_id} has resumed")
+        else:
+            logging.error(f"Invalid command received: {command}")
 
     def move(self):
         # Check if there are more nodes in the path and the robot is active

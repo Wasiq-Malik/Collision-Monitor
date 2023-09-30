@@ -30,7 +30,7 @@ def main():
         rabbitmq_server=rabbitmq_server
     )
     # Simulate the robot's movement and send its state to RabbitMQ
-    for _ in range(len(robot.path) - 1):
+    while robot.path_index < len(robot.path) - 1:
         logger.info('Moving robot and sending state to RabbitMQ')
         robot.move()
         robot.send_state()
