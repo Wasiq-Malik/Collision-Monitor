@@ -1,7 +1,26 @@
 # Collision Monitor System for iw.hub
 
 ## Table of Contents
-
+1. [Introduction](#introduction)
+   1. [Project Requirements](#project-requirements)
+2. [Quick Start](#quick-start)
+   1. [Prerequisites](#prerequisites)
+   2. [Running the Simulation](#running-the-simulation)
+   3. [Viewing the Logs](#viewing-the-logs)
+   4. [Stopping the Simulation](#stopping-the-simulation)
+   5. [Running the Unit Tests](#running-the-unit-tests)
+3. [Implementation Details](#implementation-details)
+   1. [Technology Stack](#technology-stack)
+   2. [Directory Structure](#directory-structure)
+   3. [System Architecture](#system-architecture)
+   4. [Robot Simulator](#robot-simulator)
+   5. [Collision Monitor](#collision-monitor)
+4. [Testing and Validation](#testing-and-validation)
+   1. [Unit Tests](#unit-tests)
+   2. [Validation](#validation)
+5. [Scalable Production Deployments](#scalable-production-deployments)
+6. [Theoretical Discussions](#theoretical-discussions)
+7. [Conclusion](#conclusion)
 
 ## Introduction
 The overarching aim of this project is to create a robust Collision Monitor System for `iw.hub` that proficiently manages and monitors the movement of robots to prevent collisions. The necessity for such a system arises from the complex interaction scenarios the robots face, making collision avoidance paramount to maintain the operational flow and to ensure the safety of the robots.
