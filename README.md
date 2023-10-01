@@ -2,12 +2,47 @@
 
 ## Table of Contents
 1. [Introduction](#introduction)
-2. [Implementation Details](#implementation-details)
-3. [Solution Proposed](#solution-proposed)
-4. [Testing and Validation](#testing-and-validation)
-5. [Scalability Considerations](#scalability-considerations)
-6. [Theoretical Discussions](#theoretical-discussions)
-7. [Conclusion](#conclusion)
+2. [Quick Start](#quick-start)
+   1. [Prerequisites](#prerequisites)
+   2. [Running the Simulation](#running-the-simulation)
+   3. [Viewing the Logs](#viewing-the-logs)
+   4. [Stopping the Simulation](#stopping-the-simulation)
+   5. [Running the Unit Tests](#running-the-unit-tests)
+3. [Implementation Details](#implementation-details)
+   1. [Technology Stack](#technology-stack)
+   2. [Directory Structure](#directory-structure)
+4. [Robot Simulator](#robot-simulator)
+   1. [Design and Implementation](#design-and-implementation)
+   2. [Initial States and Path](#initial-states-and-path)
+5. [Collision Monitor](#collision-monitor)
+   1. [Design Considerations](#design-considerations)
+   2. [Global State](#global-state)
+   3. [Reactivity vs. Periodicity](#reactivity-vs-periodicity)
+   4. [Detection Algorithms](#detection-algorithms)
+   5. [Proximity Function](#proximity-function)
+   6. [Global Collision Evaluation](#global-collision-evaluation)
+   7. [Collision Resolution Algorithms](#collision-resolution-algorithms)
+   8. [Dependency Resolution](#dependency-resolution)
+   9. [Periodic Re-evaluation](#periodic-re-evaluation)
+   10. [Event-Driven Re-evaluation](#event-driven-re-evaluation)
+   11. [Deadlock Scenarios](#deadlock-scenarios)
+6. [System Architecture](#system-architecture)
+7. [Testing and Validation](#testing-and-validation)
+   1. [Unit Tests](#unit-tests)
+      1. [Robot Tests](#robot-tests)
+      2. [Collision Monitor Tests](#collision-monitor-tests)
+   2. [Validation](#validation)
+8. [Scalability Considerations](#scalability-considerations)
+   1. [10 Robots](#10-robots)
+   2. [100 Robots](#100-robots)
+   3. [1000 Robots](#1000-robots)
+   4. [Large-Scale System Design](#large-scale-system-design)
+9. [Theoretical Discussions](#theoretical-discussions)
+   1. [Delays in State Messages](#delays-in-state-messages)
+   2. [Handling Dead-Zones](#handling-dead-zones)
+   3. [Limitations of Collision Monitor](#limitations-of-collision-monitor)
+   4. [Proactive Approaches for Collision Avoidance](#proactive-approaches-for-collision-avoidance)
+10. [Conclusion](#conclusion)
 
 ## Introduction
 Brief overview of the project, its objectives, and expected outcomes.
@@ -290,13 +325,65 @@ Discussion about the overall solution proposed, its components, and how they int
 ### Unit Tests
 Description and results of the unit tests performed on various components of the project.
 
+#### Robot Tests
+
+1. **test_move_success:**
+   - Tests whether the robot moves to the next node correctly and updates its state, including battery level and position, properly.
+
+2. **test_pause_and_move:**
+   - Ensures that the robot doesn’t move to the next node when it's paused.
+
+3. **test_resume_and_move:**
+   - Validates that the robot, once resumed, is able to move to the next node correctly.
+
+4. **test_move_at_last_node:**
+   - Ensures that the robot doesn't move past the last node in its path.
+
+5. **test_handle_command_pause:**
+   - Tests whether the robot correctly updates its status to `paused` when receiving a `pause` command.
+
+6. **test_handle_command_resume:**
+   - Checks if the robot correctly updates its status to `active` when receiving a `resume` command.
+
+7. **test_handle_command_invalid:**
+   - Ensures that the robot doesn’t accept an invalid status when receiving an invalid command.
+
+#### Collision Monitor Tests
+
+1. **test_no_collision:**
+   - Tests if the collision monitor can correctly handle scenarios where there are no collisions between the robots.
+   - This is verified by ensuring that no robot is paused, and all robots maintain their active state.
+
+2. **test_all_robots_collide:**
+   - Tests the scenario where all robots are on a collision course.
+   - It verifies that the collision monitor correctly identifies which robot should be paused to avoid the collision and that the dependencies are properly set.
+
+3. **test_two_robots_collide:**
+   - Tests a scenario where two out of three robots are about to collide.
+   - It checks if the collision monitor correctly identifies the colliding robots and sets the dependencies accurately, leaving the non-colliding robot active.
+
+4. **test_robot_resumes_after_collision_resolution:**
+   - Tests if a paused robot can correctly resume its movement after the collision has been resolved.
+   - This is verified by simulating the movement of the colliding robot away from the collision point and checking whether the paused robot resumes its movement.
+
+5. **test_robot_reaches_destination:**
+   - Tests if the collision monitor properly handles the scenario where a robot has reached its destination.
+   - It verifies that the robot is removed from the global state of active robots once it reaches its destination.
+
+
 ### Validation
 Discussion about the validation of the overall system, including any manual testing and the outcomes.
 
 ## Scalability Considerations
 Discussion about how the design can scale and considerations and modifications needed for large scale implementations.
 
-### Large Scale Collision Detection
+### 10 Robots
+
+### 100 Robots
+
+### 1000 Robots
+
+### Large-Scale System Design
 Discussion about designing solutions for large-scale collision detection and how the current solution can be adapted or modified for it.
 
 ## Theoretical Discussions
