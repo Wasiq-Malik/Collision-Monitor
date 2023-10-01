@@ -1,52 +1,23 @@
 # Collision Monitor System for iw.hub
 
 ## Table of Contents
-1. [Introduction](#introduction)
-2. [Quick Start](#quick-start)
-   1. [Prerequisites](#prerequisites)
-   2. [Running the Simulation](#running-the-simulation)
-   3. [Viewing the Logs](#viewing-the-logs)
-   4. [Stopping the Simulation](#stopping-the-simulation)
-   5. [Running the Unit Tests](#running-the-unit-tests)
-3. [Implementation Details](#implementation-details)
-   1. [Technology Stack](#technology-stack)
-   2. [Directory Structure](#directory-structure)
-4. [Robot Simulator](#robot-simulator)
-   1. [Design and Implementation](#design-and-implementation)
-   2. [Initial States and Path](#initial-states-and-path)
-5. [Collision Monitor](#collision-monitor)
-   1. [Design Considerations](#design-considerations)
-   2. [Global State](#global-state)
-   3. [Reactivity vs. Periodicity](#reactivity-vs-periodicity)
-   4. [Detection Algorithms](#detection-algorithms)
-   5. [Proximity Function](#proximity-function)
-   6. [Global Collision Evaluation](#global-collision-evaluation)
-   7. [Collision Resolution Algorithms](#collision-resolution-algorithms)
-   8. [Dependency Resolution](#dependency-resolution)
-   9. [Periodic Re-evaluation](#periodic-re-evaluation)
-   10. [Event-Driven Re-evaluation](#event-driven-re-evaluation)
-   11. [Deadlock Scenarios](#deadlock-scenarios)
-6. [System Architecture](#system-architecture)
-7. [Testing and Validation](#testing-and-validation)
-   1. [Unit Tests](#unit-tests)
-      1. [Robot Tests](#robot-tests)
-      2. [Collision Monitor Tests](#collision-monitor-tests)
-   2. [Validation](#validation)
-8. [Scalability Considerations](#scalability-considerations)
-   1. [10 Robots](#10-robots)
-   2. [100 Robots](#100-robots)
-   3. [1000 Robots](#1000-robots)
-   4. [Large-Scale System Design](#large-scale-system-design)
-9. [Theoretical Discussions](#theoretical-discussions)
-   1. [Delays in State Messages](#delays-in-state-messages)
-   2. [Handling Dead-Zones](#handling-dead-zones)
-   3. [Limitations of Collision Monitor](#limitations-of-collision-monitor)
-   4. [Proactive Approaches for Collision Avoidance](#proactive-approaches-for-collision-avoidance)
-10. [Conclusion](#conclusion)
+
 
 ## Introduction
-Brief overview of the project, its objectives, and expected outcomes.
+The overarching aim of this project is to create a robust Collision Monitor System for `iw.hub` that proficiently manages and monitors the movement of robots to prevent collisions. The necessity for such a system arises from the complex interaction scenarios the robots face, making collision avoidance paramount to maintain the operational flow and to ensure the safety of the robots.
 
+### Project Requirements
+The foundational requirements for this project are as follows:
+
+1. **Real-Time Monitoring:** Develop a system capable of real-time tracking and monitoring of each robot's position, orientation, and state within a defined environment.
+2. **Collision Detection:** Implement algorithms capable of predicting potential collisions between the robots based on their current state and predefined paths.
+3. **Command Handling:** Enable the system to send immediate commands to the robots, allowing them to pause, resume, or alter their paths to avoid collisions.
+4. **State Management:** Maintain the global state of all robots efficiently, reflecting the real-time status, position, and battery level of each robot.
+5. **Asynchronous Interaction:** Facilitate real-time, asynchronous interactions between robots and the monitor, ensuring immediate response to state changes or received commands.
+6. **Scalability:** Design the system to be scalable, capable of managing a varying number of robots, ranging from a few to several hundred, without compromising on performance and responsiveness.
+7. **Testing and Validation:** Construct comprehensive test suites to validate the functionality of each component and the system as a whole, ensuring reliability and robustness.
+
+The ensuing report provides detailed insights into the design considerations, implementation details, testing, and validation of the developed Collision Monitor System, illustrating how it aligns with the outlined requirements to offer an effective solution for collision avoidance in `iw.hub`.
 ## Quick Start
 
 ### Prerequisites
@@ -68,7 +39,6 @@ Brief overview of the project, its objectives, and expected outcomes.
 ### Running the Unit Tests
 1. Navigate to the project's root directory in your terminal.
 2. Execute: `python -m unittest discover tests`
-
 
 
 ## Implementation Details
@@ -104,17 +74,31 @@ Collision-Monitor/
 ├── docker-compose.yml          # docker-compose file to orchestrate the simulation
 └── wait-for-it.sh              # Script to manage service dependencies in compose
 ```
+## System Architecture
+Design of the overall solution proposed, its components, and how they interact to solve the problem.
+
+**Basic System Architecture:**
+
+![Basic Architecture](images/basic-architecture.png)
 
 ## Robot Simulator
 ### Design and Implementation
-Detailing the design choices and implementation details of the robot simulator, including how robots are moving, sending states, and handling commands.
+The robot simulator is a simple script that reads the state of a robot from a provided path and simulates the movement of the robot from the given intial state, it also sends the robot state to the RabbitMQ Queue to enable async communication with the collision monitor service.
 
-### Initial States and Path
-Description of how initial states and paths are defined and loaded for each robot.
+#### Asynchronous Command Handling:
+- A separate thread is used to continuously listen to and process incoming commands, allowing robots to respond to pause and resume commands in real time.
+
+#### State Management:
+- The robot's state, including its position, orientation, battery level, and the remaining path, is managed internally and can be fetched and published via RabbitMQ, facilitating real-time state sharing and interaction.
+
+#### Path Following:
+- The robot follows the initialized path, moving to the next node in the path with each move, and updating its internal state accordingly.
+
 
 ## Collision Monitor
 ### Design Considerations
 The Collision Monitor is a micro-service that can be deployed as a standalone container that maintains the global state of all the robots.
+This service is the core of part of our solution for collision resolution for our robots. A major chunk of implementation time went into the extendible design of this service. We want our service to be scalable to upto 1000s of robots.
 
 #### Global State
 
@@ -169,7 +153,7 @@ Given the time constraints and wanting to reduce the complexity of our solution,
 
 #### Proximity Function
 
-For each pair of robots, calculate the Euclidean distance between their current positions. This will have a runtime of O(n^2). We can improve this algorithm for larger scales by utilising sorting and divide and conquer algorithms which will efficiently calculate the distances between all possibly colliding robots.
+For each pair of robots, calculate the Euclidean distance between their current positions. This algorithm will have a runtime of O(n^2) which is fine for out 3-robot simulation.
 
 The threshold can be the sum of the radii of the equivalent circles of the two robots, where the radius is half of the diagonal of the robot.
 
@@ -204,6 +188,10 @@ diagonal = math.sqrt(width**2 + length**2)
 # Calculate the threshold for collision
 threshold = diagonal  # Since both robots are of the same size
 ```
+
+**Optimal Algorithm**
+
+We can improve our design for larger scales by utilising spatial partionioning algorithms along with a grid-based approach that will only calculate distances for robots in the same cell that can possibly collide. We can implement this optimization using Quad-Trees. It will reduce the overhead of calculting distances between all pairs of robots.
 
 #### Global Collision Evaluation
 We use our defined proximity function to calculate collisions for all pairs of robots in their next time-step whenever we recieve a robot state update.
@@ -318,8 +306,7 @@ def resume_robots(self, moved_robot_id):
             self.resume_robot(paused_robot)
 ```
 
-## System Architecture
-Discussion about the overall solution proposed, its components, and how they interact to solve the problem.
+Combining the detection algorithm with efficient robot resumption with deadlock prevention helps our collision monitor to prevent robots from colliding with each other ahead of time and ensures smooth operation at a small scale.
 
 ## Testing and Validation
 ### Unit Tests
@@ -372,33 +359,111 @@ Description and results of the unit tests performed on various components of the
 
 
 ### Validation
-Discussion about the validation of the overall system, including any manual testing and the outcomes.
+We've manually tested and validated the working of our collision monitor and robot simualtor in tandem with the RabbitMQ pub/sub system.
 
-## Scalability Considerations
-Discussion about how the design can scale and considerations and modifications needed for large scale implementations.
+We manually test two different scenarios end-to-end, a set of 3 robots that all collide together and end up in a deadlock and a happy case where we see no colliding robots. The system is able to detect collisions, resolve them and reach the end equilibrium state of the system. The default simulation setup in the repository represents the 3 colliding robots. We can change the files in the `robot_states` directory to try a different simulation.
+
+Due to time constraints, we decide to stick with writing unit tests for these scenarios and we leave integrations tests to be written in the future.
+Integration tests would involve all 3 components of our system, the robot simulator, collision monitoring service and our rabbitMQ instance.
+
+## Scalable Production Deployments
+Discussion about how the design can scale and considerations and modifications needed for large scale implementations. We will discuss specific steps of production-ready deployments, which cloud services to use, modify existing implementation if needed and design a scalable architecture.
 
 ### 10 Robots
+At the 10 robot scale, the current implementation can manage without significant strain on resources.
+
+#### Collision Monitor Service
+Our currently implemented algorithms are robust enough to handle the scale of 10 robots. We can deploy our collision monitor with it's in-memory global state in a standalone container running on a single VM. We can host our collision monitor on any cloud provide (GCP VMs or AWS EC2).
+
+We will however, have to add some fault tolerance in our service, upon any crashes the internal state of the collision monitor will be lost. We can fix this by dumping the robot state on a file on a persistent disk or a lightweight db after every update. Incase of any crashes, our program should read the last state from disk when it's booting up.
+
+#### RabbitMQ Service
+To prevent a single-point of failure, we can have another VM, running our rabbitMQ container, as it will only have to maintain at max 10 more queues, we don't need to worry about making our rabbitMQ service scalable just yet.
 
 ### 100 Robots
+At this scale, more sophisticated strategies need to be employed to maintain system performance and reliability.
+
+#### Collision Monitor Service
+We need to make our service scalable, we can deploy our containers using managed kubernetes services like GCP GKE or AWS EKS. It'll be even easier to deploy our container's on a managed service like GCP's Cloud Run. It will handle auto-scaling, load balancing and auto-healing as well.
+
+We need to handle the Global State for our service, we can sync it accross containers using one Redis instance, it should be good enough to hold a 100-robot large state space.
+
+Next, we need to optimize our collision detection algorithm, we need to employ spatial partioning algorithms using Quad Trees that will divide the whole warehouse grid into smaller consumable chunks and reduce the work we need to do to calculate all collision scenarios.
+
+As our services become more complex, we need to invest in alerting and monitoring services as well, we can utilize our cloud provider's managed services for this task. We can make our service more fault tolerant and robust in case of failures and crashes.
+
+#### RabbitMQ Service
+At this scale we need to think about improving the scalability and availability of our RabbitMQ Service. We can deploy a kubernetes cluster of RabbitMQ servers.
+
+The cluster will consist of replicated queues making our services highly available, if one node goes down, another will be ready to serve.
+
+Handling a large influx of robot states in a single queue might create a bottleneck, we will have to utilize RabbitMQ's sharding plugin that is able to split a single queue into multiple queues for increased throughput but it is able to maintain it has one big logical queue. We can now afford to recieve location updates from robots even at 10 times a second.
+
+The combination of redundant RabbitMQ nodes and sharding at an individual node level can help us achieve high throughput and high availability as such a large scale.
 
 ### 1000 Robots
+At the 1000 robot scale, the system needs extensive optimizations, advanced architectures, and robust fault tolerance to manage the complex interaction efficiently.
+
+#### Collision Monitor Service
+We would need to employ highly optimized and sophisticated collision detection algorithms, possibly utilizing machine learning or other AI techniques, to handle the increased complexity and interaction efficiently.
+
+We would need to use advanced state management solutions like distributed databases with high read and write speeds to maintain and synchronize the global state of robots effectively and consistently.
+
+We might want to split our service into smaller micro-services that deal with one part of the problem each. The distributed db will help us sync accross our micro-services.
+- We can have the collision detection service run spatial partioning or machine learning algorithms independently and scale to it's individually required resources (e.g GPUs for ML).
+- Similarly, the collision prevention service can run it's own algorithms on the detected potential collisions and send out the pause commands optimally.
+- Lastly, we can run a separate collision resolution service that runs it's decision-making algorithms to decide which robot to unpause and resolve deadlock scenarios.
+
+#### RabbitMQ Service
+Our rabbitMQ scalable cluster with queue sharding should be able to handle a scale of 1000s of messages per second. It can handle increased frequency of location updates as well. We can probably handle 2-3 location updates per second for 1000 robots.
+
+We can choose move our RabbitMQ cluster from kubernetes to one of the managed RabbitMQ solutions provided by cloud providers like AWS. This will reduce the overhead for us to maintain the cluster ourself and also support monitoring and alerting on it.
 
 ### Large-Scale System Design
-Discussion about designing solutions for large-scale collision detection and how the current solution can be adapted or modified for it.
+Let's discuss on how we can take our design to the next level, we're talking about monitoring more than 1000 robots that send their state updates more frequently for improved accuracy. If robots move quite fast we need to send location updates 10 times or even 100 times in one second.
+This would scale up the messages we have to process every second to upto 100K.
+
+RabbitMQ would not be able to handle such throughput as it can handle around 3-4k messages per second. We would have to look at alternatives like Kafka at this scale, it is able scale-up to stream messages in real-time with upto 1000k messages per second.
+
+**Scalable System Architecture:**
+
+![Large-scale System Architecture](images/scalable-architecture.png)
+
 
 ## Theoretical Discussions
 ### Delays in State Messages
-Discussion on considerations and design adaptations needed for delays in state messages due to poor internet connection in factories.
+- Message Retries and Acknowledgements: Design a robust messaging protocol where messages that could not be delivered due to connectivity issues are retried. Implement acknowledgements to ensure that messages have been received and processed.
 
+- Time Stamps: Each message has timestamp indicating when the state was recorded, allowing the Collision Monitor to account for delays and adjust calculations accordingly.
+
+- Buffering and Caching: Implement buffering mechanisms on the robots, allowing them to store state messages locally when the network is unavailable and send them once the connection is restored.
+
+
+- Notification and Alerts: Implement alerting mechanisms to notify operators about the delay in state messages so that manual interventions can be made if necessary.
 ### Handling Dead-Zones
-Exploration of potential edge cases arising from dead-zones in the factory and strategies and design modifications to handle them.
+- Global Backup-plan: Whenever a robot enters the network, give it a backup global plan that is created on runtime to avoid collision according to the path plans given to all the robots at that time, when it looses connectivity it can reply on the offline backup plan.
+
+- Use of Sensors: Employ additional sensors on robots, like lidar or ultrasonic sensors, allowing them to detect and avoid collisions autonomously using machine learning algorithms that run on-device, in areas with no connectivity.
+
+- Swarm Intelligence: Implement swarm intelligence algorithms to allow robots to coordinate and make decisions collectively, reducing the reliance on a central collision monitor and allowing more adaptive and resilient behavior, especially in dead-zones.
 
 ### Limitations of Collision Monitor
-Discussion about scenarios where the Collision Monitor might not be effective in avoiding collisions/deadlocks and the inherent limitations of the reactive system.
+- Real-Time Constraints: The Collision Monitor might struggle in scenarios where real-time decisions are required, and even slight delays in processing or communication can lead to collisions. We should probably change our approach to predictive collision prevention.
+
+- Dynamic Environments: In complex environments where obstacles or even moving humans are present, we cannot simply reply on our service anymore as it cannot control other moving obstacles or humans.
+
+- Robot Dependant: In scenarios where robot sensors are not as accurate and might return incorrect information, our collision detector will fail more often, e.g. dusty or foggy environments.
 
 ### Proactive Approaches for Collision Avoidance
-Discussion and exploration of other approaches that could be implemented to proactively avoid collisions, and how they would be implemented.
+- Global Path Planning: Implement advanced path planning algorithms that consider the paths of all robots in a global context to avoid potential collisions and deadlocks proactively, rather than reacting to possible collisions.
 
+- Dynamic Replanning: Equip robots with the capability to dynamically replan their paths based on the real-time states of their surroundings, allowing them to avoid unexpected obstacles or changes in the environment.
+
+- Swarm Intelligence: Implement swarm intelligence algorithms to allow robots to coordinate and make decisions collectively, reducing the reliance on a central collision monitor and allowing more adaptive and resilient behavior, especially in dead-zones.
 ## Conclusion
-Final thoughts, summary of the project outcomes, and potential future work.
+
+In conclusion, this project was successful in developing a functioning Collision Monitor System for iw.hub robots, addressing the necessity of real-time collision detection and avoidance within a factory setting. The system is robust, practical, and scalable, capable of integrating seamlessly in varied operational environments.
+
+This endeavor allowed for a deeper understanding of real-world applications and potential challenges, such as connectivity issues and operational dead-zones, and presented opportunities for practical problem-solving and application of theoretical knowledge.
+
 
