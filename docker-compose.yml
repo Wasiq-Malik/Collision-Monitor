@@ -50,6 +50,7 @@ services:
     environment:
       - ROBOT_CONFIG_FILE=./robot_simulator/robot_states/robot_2.json
       - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_QUEUE=robot_states
     depends_on:
       - rabbitmq
     command:
@@ -68,6 +69,7 @@ services:
     environment:
       - ROBOT_CONFIG_FILE=./robot_simulator/robot_states/robot_3.json
       - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_QUEUE=robot_states
     depends_on:
       - rabbitmq
     command:
