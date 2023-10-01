@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from robot import Robot  # Ensure this is the correct import
+from robot_simulator.robot import Robot  # Ensure this is the correct import
 
 
 class TestRobot(unittest.TestCase):
@@ -16,8 +16,8 @@ class TestRobot(unittest.TestCase):
         ]
         self.rabbitmq_server = 'some_server'
 
-        with patch('robot.RabbitMQConsumer', autospec=True) as self.MockConsumer, \
-                patch('robot.RabbitMQPublisher', autospec=True) as self.MockPublisher:
+        with patch('robot_simulator.robot.RabbitMQConsumer', autospec=True) as self.MockConsumer, \
+                patch('robot_simulator.robot.RabbitMQPublisher', autospec=True) as self.MockPublisher:
             self.robot = Robot(self.device_id, self.initial_position, self.path, self.rabbitmq_server)
 
     def test_move_success(self):

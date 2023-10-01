@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from collision_monitor import CollisionMonitor
+from collision_monitor.collision_monitor import CollisionMonitor
 
 
 class TestCollisionMonitor(unittest.TestCase):
@@ -10,8 +10,8 @@ class TestCollisionMonitor(unittest.TestCase):
         self.input_queue_name = 'input_queue'
 
         # Patching the RabbitMQConsumer and RabbitMQPublisher to avoid real RabbitMQ interactions during the test.
-        with patch('collision_monitor.RabbitMQConsumer', autospec=True) as self.MockConsumer, \
-                patch('collision_monitor.RabbitMQPublisher', autospec=True) as self.MockPublisher:
+        with patch('collision_monitor.collision_monitor.RabbitMQConsumer', autospec=True) as self.MockConsumer, \
+                patch('collision_monitor.collision_monitor.RabbitMQPublisher', autospec=True) as self.MockPublisher:
 
             self.collision_monitor = CollisionMonitor(self.rabbitmq_server, self.input_queue_name)
             self.collision_monitor.consumer = self.MockConsumer

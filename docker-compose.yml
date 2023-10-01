@@ -1,7 +1,80 @@
-version: '3'
+version: '3.8'
 services:
   rabbitmq:
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
       - "15672:15672"
+
+  collision_monitor:
+    build:
+      context: .
+      dockerfile: ./collision_monitor/Dockerfile
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_QUEUE=robot_states
+    depends_on:
+      - rabbitmq
+    command:
+      [
+        "./wait-for-it.sh",
+        "rabbitmq:5672",
+        "--",
+        "python",
+        "./collision_monitor/main.py"
+      ]
+
+  robot1:
+    build:
+      context: .
+      dockerfile: ./robot_simulator/Dockerfile
+    environment:
+      - ROBOT_CONFIG_FILE=./robot_simulator/robot_states/robot_1.json
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_QUEUE=robot_states
+    depends_on:
+      - rabbitmq
+    command:
+      [
+        "./wait-for-it.sh",
+        "rabbitmq:5672",
+        "--",
+        "python",
+        "./robot_simulator/robot_simulator.py"
+      ]
+
+  robot2:
+    build:
+      context: .
+      dockerfile: ./robot_simulator/Dockerfile
+    environment:
+      - ROBOT_CONFIG_FILE=./robot_simulator/robot_states/robot_2.json
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - rabbitmq
+    command:
+      [
+        "./wait-for-it.sh",
+        "rabbitmq:5672",
+        "--",
+        "python",
+        "./robot_simulator/robot_simulator.py"
+      ]
+
+  robot3:
+    build:
+      context: .
+      dockerfile: ./robot_simulator/Dockerfile
+    environment:
+      - ROBOT_CONFIG_FILE=./robot_simulator/robot_states/robot_3.json
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - rabbitmq
+    command:
+      [
+        "./wait-for-it.sh",
+        "rabbitmq:5672",
+        "--",
+        "python",
+        "./robot_simulator/robot_simulator.py"
+      ]
